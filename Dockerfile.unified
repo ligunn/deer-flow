@@ -1,0 +1,96 @@
+# Unified DeerFlow Container
+# Multi-stage Debian-based image for both backend and frontend
+# This is an ALTERNATIVE to the multi-container docker-compose setup
+# Use ONLY if you prefer a single monolithic container (not recommended for DeerFlow)
+
+# Stage 1: Build Backend (Python)
+FROM debian:bookworm-slim AS backend-builder
+
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    build-essential \
+    python3.12 \
+    python3.12-dev \
+    python3.12-venv \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install UV package manager
+RUN curl -LsSf https://astral.sh/uv/install.sh | sh
+ENV PATH="/root/.cargo/bin:$PATH"
+
+WORKDIR /app
+
+# Copy backend dependencies
+COPY backend/pyproject.toml backend/uv.lock ./
+RUN uv sync --frozen --python 3.12
+
+# Stage 2: Build Frontend (Node.js)
+FROM node:20-alpine AS frontend-builder
+
+RUN npm install -g pnpm
+
+WORKDIR /app
+
+# Copy frontend dependencies
+COPY frontend/package.json frontend/pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+
+# Copy frontend source
+COPY frontend/ .
+RUN pnpm run build
+
+# Stage 3: Runtime (Final Image)
+FROM debian:bookworm-slim
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y \
+    python3.12 \
+    python3.12-venv \
+    curl \
+    git \
+    node \
+    npm \
+    supervisor \
+    nginx \
+    && npm install -g pnpm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Create app directory
+WORKDIR /app
+
+# Copy Python venv from backend builder
+COPY --from=backend-builder /app/.venv /app/backend/.venv
+
+# Copy backend code
+COPY backend/ ./backend/
+COPY config.yaml config.example.yaml ./
+
+# Copy frontend dist and code
+COPY --from=frontend-builder /app/.next ./frontend/.next
+COPY frontend/public ./frontend/public
+COPY frontend/package.json ./frontend/
+
+# Create necessary directories
+RUN mkdir -p /app/logs /app/skills /app/backend/.deer-flow
+
+# Set environment variables
+ENV PATH="/app/backend/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/backend:$PYTHONPATH"
+ENV CI=true
+
+# Copy nginx config
+COPY docker/nginx/nginx.conf /etc/nginx/nginx.conf
+
+# Copy supervisor config
+COPY supervisord.conf /etc/supervisor/conf.d/supervisord.conf
+
+# Expose ports
+EXPOSE 2026 3000 8001 2024
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:2026/health || exit 1
+
+# Start supervisor to manage all services
+CMD ["supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]
