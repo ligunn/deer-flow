@@ -278,8 +278,8 @@ summarization:
     - type: messages
       value: 50
     # Uncomment to trigger when 80% of model's max input tokens is reached
-    - type: fraction
-      value: 0.8
+    # - type: fraction
+    #  value: 0.8
 
   # Context retention policy after summarization
   # Specifies how much recent history to preserve
