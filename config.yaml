@@ -26,7 +26,7 @@ models:
     use: langchain_openai:ChatOpenAI
     model: gpt-5.4-mini-2026-03-17
     api_key: $OPENAI_API_KEY
-    max_tokens: 28000
+    max_tokens: 8192
     temperature: 0.7
     supports_vision: true
 
@@ -35,8 +35,8 @@ models:
     use: langchain_openai:ChatOpenAI
     model: gpt-5.4-2026-03-05
     api_key: $OPENAI_API_KEY
-    max_tokens: 32000
-    temperature: 0.55
+    max_tokens: 8192
+    temperature: 0.75
     supports_vision: true
   
   - name: gpt-5.4-nano-2026-03-17
@@ -44,8 +44,8 @@ models:
     use: langchain_openai:ChatOpenAI
     model: gpt-5.4-nano-2026-03-17
     api_key: $OPENAI_API_KEY
-    max_tokens: 64000
-    temperature: 0.85
+    max_tokens: 8192
+    temperature: 0.95
     supports_vision: true
 
   - name: gpt-5-chat-latest-2025-08-07
@@ -55,15 +55,15 @@ models:
     api_key: $OPENAI_API_KEY
     use_responses_api: true
     output_version: responses/v1
-    max_tokens: 12000
-    temperature: 0.55
+    max_tokens: 8192
+    temperature: 0.80
     
   - name: gemini-2.5-pro
     display_name: Gemini 2.5 Pro
     use: langchain_google_genai:ChatGoogleGenerativeAI
     model: gemini-2.5-pro
     google_api_key: $GOOGLE_API_KEY
-    max_tokens: 32000
+    max_tokens: 8192
     supports_vision: true
 
   - name: deepseek-v3.2
@@ -71,7 +71,7 @@ models:
     use: deerflow.models.patched_deepseek:PatchedChatDeepSeek
     model: deepseek-reasoner
     api_key: $DEEPSEEK_API_KEY
-    max_tokens: 64000
+    max_tokens: 8192
     supports_thinking: true
     supports_vision: false
     when_thinking_enabled:
@@ -100,14 +100,14 @@ tools:
   - name: web_search
     group: web
     use: deerflow.community.tavily.tools:web_search_tool
-    max_results: 5
+    max_results: 8
     api_key: $TAVILY_API_KEY
 
   # Web fetch tool (uses Jina AI reader)
   - name: web_fetch
     group: web
     use: deerflow.community.jina_ai.tools:web_fetch_tool
-    timeout: 10
+    timeout: 12
 
   # Image search tool (uses DuckDuckGo)
   # Use this to find reference images before image generation
@@ -179,7 +179,7 @@ sandbox:
 #   # Optional: Maximum number of concurrent sandbox containers (default: 3)
 #   # When the limit is reached the least-recently-used sandbox is evicted to
 #   # make room for new ones. Use a positive integer here; omit this field to use the default.
-  replicas: 2
+  replicas: 1
 #
 #   # Optional: Prefix for container names (default: deer-flow-sandbox)
 #   # container_prefix: deer-flow-sandbox
@@ -197,12 +197,6 @@ sandbox:
   environment:
     DATABASE_URL: $DATABASE_URL
     NODE_ENV: $NODE_ENV
-    PGHOST: $PGHOST
-    PGDATABASE: $PGDATABASE
-    PGUSER: $PGUSER
-    PGPASSWORD: $PGPASSWORD
-    PGSSLMODE: $PGSSLMODE
-    PGCHANNELBINDING: $PGCHANNELBINDING
     TAVILY_API_KEY: $TAVILY_API_KEY
     DEER_FLOW_CONFIG_PATH: $DEER_FLOW_CONFIG_PATH
     JINA_API_KEY: $JINA_API_KEY
@@ -271,25 +265,25 @@ summarization:
   enabled: true
   model_name: gpt-5.4-nano-2026-03-17
   trigger:
-    # Trigger when token count reaches 80000
+    # Trigger when token count reaches 15564
     - type: tokens
-      value: 80000
+      value: 15564
     # Uncomment to also trigger when message count reaches 50
-    - type: messages
-      value: 50
+    # - type: messages
+    #   value: 8
     # Uncomment to trigger when 80% of model's max input tokens is reached
     # - type: fraction
-    #  value: 0.8
+    #   value: 0.8
 
   # Context retention policy after summarization
   # Specifies how much recent history to preserve
   keep:
     # Keep the most recent 10 messages (recommended)
-    # type: messages
-    # value: 12
+    type: messages
+    value: 10
     # Alternative: Keep specific token count
-    type: tokens
-    value: 64000
+    # type: tokens
+    # value: 64000
     # Alternative: Keep percentage of model's max input tokens
     # type: fraction
     # value: 0.3
@@ -312,11 +306,11 @@ memory:
   storage_path: memory.json
   debounce_seconds: 40
   model_name: gpt-5.4-mini-2026-03-17
-  max_facts: 500
-  fact_confidence_threshold: 0.65
+  max_facts: 2000
+  fact_confidence_threshold: 0.75
   injection_enabled: true
-  max_injection_tokens: 1824
-
+  max_injection_tokens: 4096
+ 
 # ============================================================================
 # Checkpointer Configuration
 # ============================================================================
@@ -365,5 +359,5 @@ guardrails:
    enabled: false
    provider:
      use: deerflow.guardrails.builtin:AllowlistProvider
-#     config:
-#       denied_tools: ["bash", "write_file"]
+     config:
+       denied_tools: [""]
