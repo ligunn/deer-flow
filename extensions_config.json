@@ -1,19 +1,19 @@
 {
   "mcpServers": {
     "filesystem": {
-      "enabled": false,
+      "enabled": true,
       "type": "stdio",
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-filesystem",
-        "/path/to/allowed/files"
+        "/mnt/repo"
       ],
       "env": {},
       "description": "Provides filesystem access within allowed directories"
     },
     "github": {
-      "enabled": false,
+      "enabled": true,
       "type": "stdio",
       "command": "npx",
       "args": [
@@ -26,13 +26,13 @@
       "description": "GitHub MCP server for repository operations"
     },
     "postgres": {
-      "enabled": false,
+      "enabled": true,
       "type": "stdio",
       "command": "npx",
       "args": [
         "-y",
         "@modelcontextprotocol/server-postgres",
-        "postgresql://localhost/mydb"
+        "$DATABASE_URL"	       
       ],
       "env": {},
       "description": "PostgreSQL database access"
