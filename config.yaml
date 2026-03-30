@@ -30,6 +30,13 @@ models:
     temperature: 0.55
     supports_vision: true
 
+  - name: gpt-5.4
+    display_name: GPT-5.4 (Codex CLI)
+    use: deerflow.models.openai_codex_provider:CodexChatModel
+    model: gpt-5.4
+    supports_thinking: true
+    supports_reasoning_effort: true
+
   - name: gpt-5.4-2026-03-05
     display_name: gpt-5.4-2026-03-05
     use: langchain_openai:ChatOpenAI
@@ -154,7 +161,7 @@ tools:
 # multiple MCP servers expose a large number of tools.
 
 tool_search:
-  enabled: false
+  enabled: true
 
 # ============================================================================
 # Sandbox Configuration
@@ -209,6 +216,10 @@ sandbox:
     OPENAI_API_KEY: $OPENAI_API_KEY
     GOOGLE_API_KEY: $GOOGLE_API_KEY
     DEEPSEEK_API_KEY: $DEEPSEEK_API_KEY
+    BETTER_AUTH_BASE_URL: $BETTER_AUTH_BASE_URL
+    GITHUB_TOKEN: $GITHUB_TOKEN
+    BG_JOB_ISOLATED_LOOPS: $BG_JOB_ISOLATED_LOOPS
+
 #
 # Option 3: Provisioner-managed AIO Sandbox (docker-compose-dev)
 # Each sandbox_id gets a dedicated Pod in k3s, managed by the provisioner.
@@ -273,7 +284,7 @@ summarization:
   trigger:
     # Trigger when token count reaches 15564
     - type: tokens
-      value: 15564
+      value: 30564
     # Uncomment to also trigger when message count reaches 50
     # - type: messages
     #   value: 8
@@ -366,4 +377,4 @@ guardrails:
    provider:
      use: deerflow.guardrails.builtin:AllowlistProvider
      config:
-       denied_tools: [""]
+       denied_tools: []
